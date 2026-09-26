@@ -1,37 +1,89 @@
-const canvas=document.getElementById('game');const ctx=canvas.getContext('2d');
-const tg=window.Telegram?.WebApp; if(tg){tg.ready();tg.expand();}
-let W=900,H=500,dpr=1,running=false,last=0,level=1,coins=Number(localStorage.getItem('adventureCoins')||0),lives=3,score=0;
-const keys={left:false,right:false};
-const player={x:90,y:350,w:34,h:48,vx:0,vy:0,onGround:false,inv:0};
-let platforms=[],items=[],enemies=[],camera=0,worldW=2600;
-function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
-function rand(a,b){return Math.random()*(b-a)+a}
-function resetLevel(){worldW=2600+level*500;camera=0;player.x=90;player.y=300;player.vx=0;player.vy=0;player.inv=0;platforms=[{x:0,y:420,w:worldW,h:80},{x:320,y:340,w:190,h:22},{x:650,y:285,w:170,h:22},{x:980,y:350,w:220,h:22},{x:1370,y:290,w:180,h:22},{x:1700,y:350,w:230,h:22},{x:2100,y:275,w:180,h:22}];items=[];enemies=[];for(let x=240;x<worldW-200;x+=rand(190,340)){if(Math.random()<.85)items.push({x,y:rand(220,370),r:10,taken:false})}for(let x=560;x<worldW-200;x+=rand(420,620)){enemies.push({x,y:378,w:32,h:42,vx:(Math.random()<.5?-1:1)*1.1,min:x-90,max:x+90,dead:false})}}
-function rectHit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-function jump(){if(running&&player.onGround){player.vy=-12;player.onGround=false}}
-function start(){document.getElementById('menu').classList.add('hidden');document.getElementById('gameOver').classList.add('hidden');lives=3;level=1;coins=Number(localStorage.getItem('adventureCoins')||0);resetLevel();running=true;last=performance.now();requestAnimationFrame(loop)}
-function endGame(){running=false;document.getElementById('finalCoins').textContent=coins;document.getElementById('finalLevel').textContent=level;document.getElementById('gameOver').classList.remove('hidden')}
-function update(dt){if(!running)return;player.vx=(keys.right?4.6:0)-(keys.left?4.6:0);player.vy+=.55;player.x+=player.vx;player.y+=player.vy;player.onGround=false;
-for(const p of platforms){if(player.x+player.w>p.x&&player.x<p.x+p.w&&player.y+player.h<=p.y+8&&player.y+player.h+player.vy>=p.y){player.y=p.y-player.h;player.vy=0;player.onGround=true}}
-if(player.x<0)player.x=0;if(player.x>worldW-player.w)player.x=worldW-player.w;if(player.y>H+100){hurt();return}
-for(const c of items){if(!c.taken&&Math.hypot(player.x+player.w/2-c.x,player.y+player.h/2-c.y)<28){c.taken=true;coins++;localStorage.setItem('adventureCoins',coins)}}
-for(const e of enemies){if(e.dead)continue;e.x+=e.vx;if(e.x<e.min||e.x>e.max)e.vx*=-1;if(rectHit(player,e)&&player.inv<=0){if(player.vy>2&&player.y+player.h<e.y+15){e.dead=true;player.vy=-8}else hurt()}}
-if(player.inv>0)player.inv-=dt;if(player.x>worldW-170){level++;resetLevel()}
-camera=Math.max(0,Math.min(worldW-W,player.x-W*.35));document.getElementById('coins').textContent=coins;document.getElementById('lives').textContent=lives;document.getElementById('level').textContent=level}
-function hurt(){if(player.inv>0)return;lives--;player.inv=1500;if(lives<=0){endGame();return}player.x=Math.max(50,player.x-180);player.y=250;player.vy=0}
-function draw(){ctx.clearRect(0,0,W,H);const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#64c8ff');sky.addColorStop(1,'#d8f4ff');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(-camera,0);
-// clouds
-ctx.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<8;i++){let x=i*430+100;ctx.beginPath();ctx.arc(x,90+(i%3)*25,25,0,7);ctx.arc(x+30,82+(i%3)*25,34,0,7);ctx.arc(x+65,94+(i%3)*25,22,0,7);ctx.fill()}
-// platforms
-for(const p of platforms){ctx.fillStyle='#58a64a';ctx.fillRect(p.x,p.y,p.w,8);ctx.fillStyle='#8a5a32';ctx.fillRect(p.x,p.y+8,p.w,p.h-8)}
-// coins
-for(const c of items)if(!c.taken){ctx.fillStyle='#ffd21f';ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,7);ctx.fill();ctx.strokeStyle='#b77a00';ctx.stroke()}
-// enemies
-for(const e of enemies)if(!e.dead){ctx.fillStyle='#d64545';ctx.fillRect(e.x,e.y,e.w,e.h);ctx.fillStyle='white';ctx.fillRect(e.x+6,e.y+8,7,7);ctx.fillRect(e.x+19,e.y+8,7,7);ctx.fillStyle='#111';ctx.fillRect(e.x+8,e.y+10,4,4);ctx.fillRect(e.x+21,e.y+10,4,4)}
-// player
-if(player.inv<=0||Math.floor(player.inv/100)%2===0){ctx.fillStyle='#2463d4';ctx.fillRect(player.x,player.y+14,player.w,34);ctx.fillStyle='#ffd2a6';ctx.beginPath();ctx.arc(player.x+17,player.y+10,14,0,7);ctx.fill();ctx.fillStyle='#222';ctx.fillRect(player.x+8,player.y+4,19,6);ctx.fillStyle='#222';ctx.fillRect(player.x+5,player.y+45,10,5);ctx.fillRect(player.x+20,player.y+45,10,5)}
-ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 18px Arial';ctx.fillText('ФІНІШ →',worldW-130,250);ctx.restore()}
-function loop(t){if(!running)return;const dt=Math.min(40,t-last);last=t;update(dt);draw();requestAnimationFrame(loop)}
-addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if(e.key==='ArrowUp'||e.key===' '||e.key==='w')jump()});addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;if(e.key==='ArrowRight'||e.key==='d')keys.right=false});
-function hold(btn,prop){btn.addEventListener('pointerdown',e=>{e.preventDefault();keys[prop]=true});['pointerup','pointercancel','pointerleave'].forEach(ev=>btn.addEventListener(ev,()=>keys[prop]=false))}hold(document.getElementById('leftBtn'),'left');hold(document.getElementById('rightBtn'),'right');document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();jump()});document.getElementById('startBtn').onclick=start;document.getElementById('restartBtn').onclick=start;
-draw();
+const tg=window.Telegram?.WebApp;if(tg){tg.ready();tg.expand()}
+const screen=document.getElementById("screen");
+const state=JSON.parse(localStorage.getItem("pasha_dragons")||"null")||{
+ gold:500,gems:25,emb:0,tab:"roost",day:1,
+ dragons:[{name:"Pyra",emoji:"🐲",element:"Вогонь",rarity:"Common",level:1,hp:120,pwr:28,def:20,xp:0}],
+ eggs:[],wins:0,losses:0
+};
+function save(){localStorage.setItem("pasha_dragons",JSON.stringify(state));}
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1600)}
+function render(){
+ document.getElementById("gold").textContent=state.gold;
+ document.getElementById("gems").textContent=state.gems;
+ document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));
+ ({roost:roost,hatchery:hatchery,battle:battle,market:market,more:more}[state.tab])();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;save();render()});
+
+function roost(){
+ const d=state.dragons[0];
+ screen.innerHTML=`<div class="hero"><h1>🏝️ Твоє драконяче гніздо</h1><p>Розвивай драконів, відкривай яйця та збирай команду.</p></div>
+ <div class="dragon-card"><div class="dragon-art">${d.emoji}</div>
+ <div class="row" style="margin-top:12px"><div><h2 style="margin:0">${d.name}</h2><span class="pill">${d.element} • ${d.rarity}</span></div><b>Lv. ${d.level}</b></div>
+ <div class="statgrid"><div class="stat"><b>${d.pwr}</b><small>⚔️ Сила</small></div><div class="stat"><b>${d.hp}</b><small>❤️ HP</small></div><div class="stat"><b>${d.def}</b><small>🛡 Захист</small></div></div>
+ <div style="margin-top:13px"><div class="row"><small class="muted">Досвід</small><small class="muted">${d.xp}/100</small></div><div class="progress"><i style="width:${d.xp}%"></i></div></div>
+ <button class="action" id="train">🔥 Тренувати — 50 🪙</button></div>
+ <div class="grid" style="margin-top:12px">
+ <div class="tile"><div class="icon">🥚</div><h3>Інкубатор</h3><p>Виводь нових драконів</p></div>
+ <div class="tile"><div class="icon">⚔️</div><h3>Sky Arena</h3><p>Бийся за нагороди</p></div></div>`;
+ document.getElementById("train").onclick=()=>{
+   if(state.gold<50)return toast("Не вистачає золота");
+   state.gold-=50;d.xp+=25;d.pwr+=3;d.hp+=8;
+   if(d.xp>=100){d.xp-=100;d.level++;d.pwr+=8;d.hp+=20;d.def+=5;toast("🐉 Дракон підняв рівень!")}else toast("🔥 Дракон став сильнішим!");
+   save();render();
+ };
+}
+
+function hatchery(){
+ screen.innerHTML=`<div class="section-title">🥚 Інкубатор</div><div class="hero"><p>Яйце коштує 150 🪙. Рідкість і стихія визначаються випадково.</p><div class="egg">🥚</div><button class="action" id="hatch">Вилупити яйце — 150 🪙</button></div>
+ <div style="margin-top:16px" class="section-title">Твоя колекція</div><div class="list">${state.dragons.map(d=>`<div class="item"><span>${d.emoji} <b>${d.name}</b><br><small class="muted">${d.element} • ${d.rarity} • Lv.${d.level}</small></span><b>⚔️${d.pwr}</b></div>`).join("")}</div>`;
+ document.getElementById("hatch").onclick=()=>{
+   if(state.gold<150)return toast("Не вистачає золота");
+   state.gold-=150;
+   const pool=[["🔥","Pyra","Вогонь"],["❄️","Glacia","Лід"],["🌪️","Zephra","Повітря"],["🌿","Terra","Природа"],["⚡","Volt","Блискавка"],["🌊","Aqua","Вода"]];
+   const r=Math.random(), pick=pool[Math.floor(Math.random()*pool.length)];
+   const rarity=r>.93?"Legendary":r>.72?"Rare":r>.42?"Uncommon":"Common";
+   const mult=rarity==="Legendary"?2.1:rarity==="Rare"?1.5:rarity==="Uncommon"?1.2:1;
+   state.dragons.push({emoji:pick[0],name:pick[1],element:pick[2],rarity,level:1,hp:Math.round(100*mult),pwr:Math.round(24*mult),def:Math.round(18*mult),xp:0});
+   save();render();toast(`🎉 Вилупився ${rarity} дракон!`);
+ };
+}
+
+function battle(){
+ const d=state.dragons.reduce((a,b)=>b.pwr>a.pwr?b:a);
+ const enemyPwr=Math.round(18+Math.random()*28+state.wins*1.4);
+ screen.innerHTML=`<div class="section-title">⚔️ Sky Arena</div><div class="arena"><span class="pill">Твій дракон</span><div class="opponent">${d.emoji}</div><div class="row"><b>${d.name}</b><b>⚔️ ${d.pwr}</b></div><hr style="border-color:#34415a"><span class="pill">Суперник</span><div class="opponent">👹</div><div class="row"><b>Shadow Beast</b><b>⚔️ ${enemyPwr}</b></div><button class="action" id="fight">⚔️ Битися</button><div id="log" class="battle-log">Перевір силу команди та починай бій.</div></div>
+ <div class="statgrid"><div class="stat"><b>${state.wins}</b><small>🏆 Перемог</small></div><div class="stat"><b>${state.losses}</b><small>💀 Поразок</small></div><div class="stat"><b>${state.emb}</b><small>💠 EMB</small></div></div>`;
+ document.getElementById("fight").onclick=()=>{
+   const chance=d.pwr/(d.pwr+enemyPwr);
+   if(Math.random()<chance){
+     const reward=40+Math.floor(Math.random()*65);state.wins++;state.gold+=reward;state.emb+=reward;
+     document.getElementById("log").textContent=`🏆 Перемога! +${reward} 🪙 та +${reward} EMB`;
+   }else{state.losses++;state.gold=Math.max(0,state.gold-25);document.getElementById("log").textContent="💥 Поразка. -25 🪙. Тренуй дракона і спробуй ще раз."}
+   save();render();
+ };
+}
+
+function market(){
+ screen.innerHTML=`<div class="section-title">🛒 Ринок</div><div class="hero"><p>Тут можна обмінювати ресурси. У цій версії ринок працює локально; для реального ринку між гравцями потрібен сервер.</p></div>
+ <div class="list" style="margin-top:12px">
+ <div class="item"><span>🍖 Пакет корму</span><button class="action" style="width:auto;margin:0;padding:9px 12px" onclick="buy(30,5)">30 🪙</button></div>
+ <div class="item"><span>💎 5 кристалів</span><button class="action" style="width:auto;margin:0;padding:9px 12px" onclick="buyGems()">100 🪙</button></div>
+ <div class="item"><span>🥚 Рідкісне яйце</span><button class="action" style="width:auto;margin:0;padding:9px 12px" onclick="buyEgg()">300 🪙</button></div></div>`;
+}
+function buy(cost,food){if(state.gold<cost)return toast("Не вистачає золота");state.gold-=cost;toast(`🍖 +${food} корму`);save();render()}
+function buyGems(){if(state.gold<100)return toast("Не вистачає золота");state.gold-=100;state.gems+=5;save();render();toast("💎 +5 кристалів")}
+function buyEgg(){if(state.gold<300)return toast("Не вистачає золота");state.gold-=300;state.eggs.push({rarity:"Rare"});save();render();toast("🥚 Рідкісне яйце додано")}
+
+function more(){
+ screen.innerHTML=`<div class="section-title">☰ Keeper's Hall</div><div class="grid">
+ <div class="tile"><div class="icon">📖</div><h3>Codex</h3><p>${state.dragons.length}/20 драконів</p></div>
+ <div class="tile"><div class="icon">🏆</div><h3>Досягнення</h3><p>${state.wins} перемог на арені</p></div>
+ <div class="tile"><div class="icon">🎯</div><h3>Щоденне</h3><p>Зайди завтра за бонусом</p></div>
+ <div class="tile"><div class="icon">👤</div><h3>Профіль</h3><p>${tg?.initDataUnsafe?.user?.first_name||"Dragon Keeper"}</p></div></div>
+ <div class="hero" style="margin-top:12px"><h3>💠 EMB</h3><p>Внутрішня валюта гри: <b>${state.emb}</b>. У цій версії це лише ігрові бали.</p></div>
+ <button class="action" onclick="resetProgress()">Скинути локальний прогрес</button>`;
+}
+function resetProgress(){if(confirm("Скинути прогрес?")){localStorage.removeItem("pasha_dragons");location.reload()}}
+
+render();

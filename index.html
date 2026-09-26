@@ -1,41 +1,38 @@
 <!doctype html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>Telegram 2D Adventure</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>Pasha Dragons</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="gameWrap">
-    <canvas id="game" aria-label="2D гра"></canvas>
-    <div id="hud">
-      <div>🪙 <span id="coins">0</span></div>
-      <div>❤️ <span id="lives">3</span></div>
-      <div>⭐ Рівень <span id="level">1</span></div>
+<div id="app">
+  <header class="topbar">
+    <div>
+      <div class="brand">🐉 Pasha Dragons</div>
+      <div class="sub">Dragon Keeper</div>
     </div>
-    <div id="menu" class="overlay">
-      <div class="card">
-        <h1>🏃 Adventure</h1>
-        <p>Збирай монети, перестрибуй перешкоди та уникай ворогів.</p>
-        <button id="startBtn">Почати гру</button>
-      </div>
+    <div class="wallet">
+      <span>🪙 <b id="gold">500</b></span>
+      <span>💎 <b id="gems">25</b></span>
     </div>
-    <div id="gameOver" class="overlay hidden">
-      <div class="card">
-        <h2>Гру завершено</h2>
-        <p>Монети: <b id="finalCoins">0</b></p>
-        <p>Рівень: <b id="finalLevel">1</b></p>
-        <button id="restartBtn">Грати ще</button>
-      </div>
-    </div>
-    <div id="controls">
-      <button id="leftBtn">◀</button>
-      <button id="jumpBtn">▲</button>
-      <button id="rightBtn">▶</button>
-    </div>
-  </div>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="game.js"></script>
+  </header>
+
+  <main id="screen"></main>
+
+  <nav class="tabs">
+    <button data-tab="roost">🏠<small>Гніздо</small></button>
+    <button data-tab="hatchery">🥚<small>Яйця</small></button>
+    <button data-tab="battle">⚔️<small>Арена</small></button>
+    <button data-tab="market">🛒<small>Ринок</small></button>
+    <button data-tab="more">☰<small>Ще</small></button>
+  </nav>
+
+  <div id="toast"></div>
+</div>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="game.js"></script>
 </body>
 </html>
