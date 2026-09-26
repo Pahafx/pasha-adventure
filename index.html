@@ -1,38 +1,125 @@
 <!doctype html>
 <html lang="uk">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#0b1220">
-<title>Pasha Dragons</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>Pasha Dragons — Sky Arena</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app">
   <header class="topbar">
     <div>
-      <div class="brand">🐉 Pasha Dragons</div>
-      <div class="sub">Dragon Keeper</div>
+      <div class="logo">🐉 PASHA DRAGONS</div>
+      <div class="subtitle">Sky Arena</div>
     </div>
     <div class="wallet">
-      <span>🪙 <b id="gold">500</b></span>
-      <span>💎 <b id="gems">25</b></span>
+      <span>🪙 <b id="gold">0</b></span>
+      <span>💎 <b id="gems">0</b></span>
+      <span>⚡ <b id="energy">0</b></span>
     </div>
   </header>
 
-  <main id="screen"></main>
+  <main>
+    <section id="home" class="screen active">
+      <div class="hero card">
+        <div>
+          <div class="eyebrow">YOUR ROOST</div>
+          <h1>Твоя драконяча команда</h1>
+          <p>Збирай драконів, прокачуй здібності та бійся командою з 3 драконів.</p>
+        </div>
+        <div class="hero-dragon">🐲</div>
+      </div>
+      <div class="section-title"><h2>Команда</h2><button class="small" data-go="dragons">Усі дракони</button></div>
+      <div id="teamPreview" class="dragon-grid"></div>
+      <div class="section-title"><h2>Сьогодні</h2></div>
+      <div id="dailyPreview" class="quest-list"></div>
+    </section>
 
-  <nav class="tabs">
-    <button data-tab="roost">🏠<small>Гніздо</small></button>
-    <button data-tab="hatchery">🥚<small>Яйця</small></button>
-    <button data-tab="battle">⚔️<small>Арена</small></button>
-    <button data-tab="market">🛒<small>Ринок</small></button>
-    <button data-tab="more">☰<small>Ще</small></button>
+    <section id="dragons" class="screen">
+      <div class="section-title"><h2>🐉 Дракони</h2><button class="small" id="autoTeam">Автокоманда</button></div>
+      <p class="muted">Натисни на дракона, щоб додати/прибрати його з команди. Максимум 3.</p>
+      <div id="dragonList" class="dragon-grid"></div>
+    </section>
+
+    <section id="hatchery" class="screen">
+      <div class="section-title"><h2>🥚 Інкубатор</h2></div>
+      <div class="egg card">
+        <div class="egg-art">🥚</div>
+        <div>
+          <h2>Таємниче яйце</h2>
+          <p>Отримай випадкового дракона. Шанс на рідкісного та легендарного вищий із дорогими яйцями.</p>
+          <div class="egg-actions">
+            <button data-egg="basic">Вилупити · 100 🪙</button>
+            <button data-egg="rare">Рідкісне · 8 💎</button>
+          </div>
+        </div>
+      </div>
+      <div class="card tip"><b>Порада:</b> різні стихії мають переваги одна над одною. Спробуй збирати збалансовану трійку.</div>
+    </section>
+
+    <section id="arena" class="screen">
+      <div class="section-title"><h2>⚔️ Sky Arena</h2><span class="rank" id="rankLabel">Bronze I</span></div>
+      <div id="arenaSetup" class="card">
+        <h2>Твоя команда</h2>
+        <div id="arenaTeam" class="mini-team"></div>
+        <button id="startBattle" class="primary">Почати бій · ⚡ 5</button>
+        <p class="muted center">Перемога: 🪙 60–120 + рейтинг. Поразка: без втрати драконів.</p>
+      </div>
+      <div id="battle" class="battle card hidden">
+        <div class="battle-head">
+          <div><span>Твоя команда</span><b id="battleTurn">Хід 1</b><span>Суперник</span></div>
+        </div>
+        <div class="battle-field">
+          <div id="enemySide" class="side"></div>
+          <div class="versus">VS</div>
+          <div id="playerSide" class="side"></div>
+        </div>
+        <div id="battleLog" class="battle-log"></div>
+        <div id="actionBar" class="action-bar"></div>
+        <button id="nextBattle" class="primary hidden">Завершити</button>
+      </div>
+    </section>
+
+    <section id="quests" class="screen">
+      <div class="section-title"><h2>📜 Квести</h2></div>
+      <div id="questsList" class="quest-list"></div>
+    </section>
+
+    <section id="codex" class="screen">
+      <div class="section-title"><h2>📖 Кодекс</h2><span id="collectionCount" class="muted"></span></div>
+      <div id="codexList" class="codex-grid"></div>
+    </section>
+
+    <section id="profile" class="screen">
+      <div class="profile-card card">
+        <div class="avatar">👑</div>
+        <h2>Вершник драконів</h2>
+        <p class="muted">Рейтинг: <b id="rating">1000</b> · Перемоги: <b id="wins">0</b></p>
+        <div class="stats-row">
+          <div><b id="dragonCount">0</b><span>драконів</span></div>
+          <div><b id="battleCount">0</b><span>боїв</span></div>
+          <div><b id="questCount">0</b><span>квестів</span></div>
+        </div>
+      </div>
+      <div class="card settings">
+        <h3>Дані гри</h3>
+        <p class="muted">Прогрес зберігається у localStorage цього браузера/Telegram WebView.</p>
+        <button id="resetGame" class="danger">Скинути прогрес</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav">
+    <button data-go="home" class="nav-btn active"><span>🏠</span>Дім</button>
+    <button data-go="dragons" class="nav-btn"><span>🐉</span>Дракони</button>
+    <button data-go="hatchery" class="nav-btn"><span>🥚</span>Яйце</button>
+    <button data-go="arena" class="nav-btn arena-nav"><span>⚔️</span>Арена</button>
+    <button data-go="quests" class="nav-btn"><span>📜</span>Квести</button>
+    <button data-go="profile" class="nav-btn"><span>👤</span>Профіль</button>
   </nav>
-
-  <div id="toast"></div>
 </div>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<div id="toast" class="toast"></div>
 <script src="game.js"></script>
 </body>
 </html>
